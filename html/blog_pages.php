@@ -1,5 +1,3 @@
-<?php include "blog_session.php"; ?>
-
 <!DOCTYPE html>
 <html lang="ru">
 

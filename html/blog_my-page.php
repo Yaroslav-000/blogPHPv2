@@ -1,52 +1,9 @@
-<?php include "blog_session.php"; ?>
-
-<!DOCTYPE html>
-<html lang="ru">
-
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Моя страница</title>
-    <link rel="stylesheet" href="/css/blog_global.css">
-    <link rel="stylesheet" href="/css/blog_global_media.css">
-    <link rel="stylesheet" href="/css/blog_header.css">
-    <link rel="stylesheet" href="/css/blog_header_media.css">
-    <link rel="stylesheet" href="/css/blog_sidbar.css">
-    <link rel="stylesheet" href="/css/blog_sidbar_media.css">
-    <link rel="stylesheet" href="/css/blog_my-page.css">
-    <link rel="icon" href="/img/favicon.png" type="image/x-icon">
-</head>
-
-<body>
     <?php
 
     $data = $_POST;
 
-    // Проверка, был ли совершён выход из аккаунта
-    if( isset($data['du_relog']) ) {
 
-        // Удаление данных куки
-        $params = session_get_cookie_params();
-        setcookie(session_name(), '', time() - 42000,
-        $params["path"], $params["domain"],
-        $params["secure"], $params["httponly"]
-    );
-
-        // Удаление куки и сессии
-        unset($_SESSION['acount']); 
-        unset($_COOKIE['acount']); 
-        setcookie('acount', null, -1, '/'); 
-
-        // Перенаправление на главную страницу
-        echo '
-            <script> window.setTimeout(function() { window.location = "blog_main.php"; }, 0) </script>
-        ';
-    }
-
-    include "blog_header.php";
-
-    // Проверка авторизиован ли пользователь
+    // Проверка авторизиован ли пользователь 
     if( !isset($_SESSION['acount']['id'])){
 
         // Если нет, то перенаправляем на основную страницу
@@ -55,187 +12,10 @@
         ';
     }
    
-        include "blog_sidbar.php";
-            
-            // Проверка, была ли отправленна форма изменения данных пользователя
-            if( isset($data['du_save']) ){
-
-                $file = 0;
-                
-                // Проверка, был ли загружен новый аватар
-                // Сделенно именно так что бы если изменяеться только имя\аватар, 
-                // не писалась ошибка что второе не загруженно\ не написанно
-                if ( $_FILES['file_avatar']['name'] == '' ) {
-
-                    // Показатель того что новый файл аватара не был загружен
-                    $file = 2;
-
-                } else    
-
-                    // Проверка расширения файла
-                    if ( $_FILES['file_avatar']['type'] !=  "image/png" ) {
-
-                        // Запись о том что расширение файла не png
-                        $errors['files'] = "Расщирение файла не png";
-
-                } else 
-
-                    // Проверка размера файла 
-                    if ( $_FILES['file_avatar']['size'] > 2097152 ) {
-
-                        // Запись о том что размер файла больше 2 мегабайт
-                        $errors['files'] = 'Размер файла больше 2 мегабайт';
-
-                } else 
-
-                    // Проверка уникальный ли старый аватар\ или нулевой аватар
-                    if( $_SESSION['acount']['avatar'] == 0 ) {
-
-                        $file = 1;
-                        $avatar_name = 0;
-                        
-                        // Обход всего масива $name, алгоритм для 
-                        // поиска самого большого идентификатора аватара
-                        // Эту систему вполне можно изменить, просто привязав идентификатор аватара к id, 
-                        // пользователя, если он создаёт аккаунт без аватара, идентификатор аватара 0,
-                        // а когда добавляет свой аватар, то просто присваеваеться его id.
-                        foreach ($autho as &$name) {
-
-                            if( $name['avatar'] > $avatar_name ){
-                                
-                                $avatar_name = $name['avatar'];
-                            }            
-                        }
-
-                        $avatar_name++;
-
-                        // Сохранение нового аватара на сервер
-                        move_uploaded_file( $_FILES['file_avatar']['tmp_name'], 
-                        'E:\PROGRAM\Vork\locHost\OSPanel\domains\blog\img\a'.$avatar_name.'.png');
-
-                        $id = $_SESSION['acount']['id'];
-
-                        // Создание переменной SQL запроса для изменения идентификатора аватара
-                        $sql = "UPDATE account SET avatar = '$avatar_name' WHERE id = '$id' ";
-
-                        // SQL запрос для изменения идентификатора аватара
-                        mysqli_query($connection, $sql) or die(mysqli_error($connection));
-
-                        // Обновленее ссесии, указанае в ней актуального идентификатора аватара
-                        $_SESSION['acount']['avatar'] = $avatar_name;
-                       
-                } else {
-
-                    $file = 1;
-
-                    // Присвоение переменной для сохранения файла актуального имени аватара
-                    $avatar_name = $_SESSION['acount']['avatar'];
-
-                    // Сохранение нового аватара на сервер
-                    move_uploaded_file( $_FILES['file_avatar']['tmp_name'], 
-                    'E:\PROGRAM\Vork\locHost\OSPanel\domains\blog\img\a'.$avatar_name.'.png');
-
-                }
-
-                // Переменна отображающая вводил ли пользователь новое имя
-                $orig = 0;
-                
-                // Проверка ввёл ли пользователь новое имя
-                if( $data['name'] == '' ){
-                    
-                    $orig = 2;
-                
-                } else 
-                    
-                    // Проверка совпадает ли новое имя со старым
-                    if( $data['name'] == $_SESSION['acount']['name'] ){
-
-                        $errors['name'] = 'Новое имя должно отличаться от старого';
-
-                } else 
-
-                    // Обход массива $name, с целью убедиться в уникальности имени
-                    foreach ($autho as &$name) {
-
-                        if( $name['name'] == $data['name'] ){
-
-                            $orig = 1;
-
-                            $errors['name'] = 'Такое имя уже есть!';
-
-                        } 
-
-                } 
-
-                // Проверка, ввёл ли пользоватеь новое имя и если да то корректно ли оно
-                if( $orig == 0 ){
-                    
-                    // Объявление переменных для SQL запроса
-                    $name = $data['name'];
-                    $id = $_SESSION['acount']['id'];
-                    
-                    // Объявление SQL переменной для SQL запроса к БД
-                    $sql = "UPDATE account SET name = '$name' WHERE id = '$id' ";
-
-                    // SQL запрос к БД, перезапись имени пользователя
-                    mysqli_query($connection, $sql) or die(mysqli_error($connection));
-                   
-                    // Обновление данных об имени пользователя в ссесии
-                    $_SESSION['acount']['name'] = $data['name'];
-                }
-
-                // Проверка был ли загружен новый аватар
-                if( $file != 2 ){
-
-                    // Проверка нет ли ошибок при обновлении аватарки
-                    if( !isset($errors['files']) ){
-
-                        // Вывод оповещения об обновлении аватара
-                        echo '
-                        <div class="flex cuc-regi">
-                            Аватар обновлён!
-                        </div>
-                        ';
-                    } else {
-
-                        // Вывод ошибок сохранения файла
-                        echo '
-                        <div class="flex errors">
-                            '. $errors['files'] .'
-                        </div>
-                    ';
-                    
-                    }
-                }
-
-                // Проверка написано ли новое имя
-                if($orig != 2){
-
-                    // Проверка отсуцтвия ошибок при обновлении имени
-                    if( !isset($errors['name'])){
-
-                        // Оповещение об успешном обновлении имени
-                        echo '
-                        <div class="flex cuc-regi">
-                            Имя обновлено!
-                        </div>
-                        ';
-
-                    } else {
-
-                        // Вовод ошибок при обновлении имени
-                        echo '
-                        <div class="flex errors">
-                            '. $errors['name'].'
-                        </div>
-                    ';
-                    } 
-                }
-                
-            }
             
             // HTML код личного кабинет 
             echo '
+        <main class="main_content">
             <section class="flex my-page">
                 <div class="flex my-page__heading">
                     <div class="my-page-heading__avatar">
@@ -251,7 +31,7 @@
                     <h2 class="title my-page-settings__title">
                         Настройки
                     </h2>
-                    <form class="flex my-page-settings__form" action="/blog_my-page.php" method="POST" enctype="multipart/form-data">
+                    <form class="flex form my-page-settings__form" action="/blog_main.php?page=my-page" method="POST" enctype="multipart/form-data">
                         <div class="flex my-page-settings-form__file">
                             <h3 class="my-page-settings-form-file__title">
                                 Ваша новая аватарка
@@ -264,8 +44,9 @@
                             </h3>
                             <input class="input my-page-settings-form-name__inp" type="text" name="name" >
                         </div>
+                        <input type="hidden" name="name-form" value="my-page__setting">
                         <div class="flex my-page-settings-form__save">
-                            <button class="flex my-page-settings-form-save__btn" name="du_save" tyep="submit" >
+                            <button class="flex my-page-settings-form-save__btn" name="du_save" type="submit" >
                                 Сохранить
                             </button>
                         </div>
@@ -275,7 +56,7 @@
             <section class="flex my-page">
                 <div class="flex my-page__new-article">
                     <h2 class="title my-page-new-article__title">
-                        <a class="title my-page-new-article-title__link" href="/blog_creature-article.php">
+                        <a class="title my-page-new-article-title__link" href="/blog_main.php?page=creature-article">
                             Создать новую статью
                         </a>
                     </h2>
@@ -338,7 +119,7 @@
             } else {
 
                 // Проверка есть ли ошибка при редактироовании статьи
-                if (isset($_GET['errors-editing']) and $_GET['errors-editing'] == 1) {
+                if ( $_GET['errors-editing'] == 1) {
 
                     // Вывод сообщения об ошибке при редактировании статьи
                     echo '
@@ -364,7 +145,7 @@
                     // Ввывод карточек блока.
                     // С каждым циклом создаёться новая карточка.
                     // Кол-во карточек зависит от переменной $card
-                    while( $i <= $card and isset($main[$i + 2]) )
+                    while( $i <= $card )
                     {
                     
                         // Вытаскивание необходимого ключа из массива $arti,
@@ -396,7 +177,7 @@
 
                         ?>
                         <!-- Ссылка обрамляющая карточку статьи, через GET запрос передаёться id  и название статьи-->
-                        <a class="link" href="/blog_article.php?id=<?php echo $arti[$key]['id'] ?>&title=<?php echo $arti[$key]['title'] ?>">
+                        <a class="link" href="/blog_main.php?page=article&id=<?php echo $arti[$key]['id'] ?>&title=<?php echo $arti[$key]['title'] ?>">
                             <button class="post content-<?php echo $main[$m] ?>__post">
                                 <!-- Верхняя часть карточки, 
                                 в ней находяться обложка и блок текста -->
@@ -470,7 +251,7 @@
                                 {
                                     
                                     ?>
-                                        <a class="link" href="/blog_editing-artiсle.php?id=<?php echo $arti[$key]['id'] ?>">
+                                        <a class="link" href="/blog_main.php?page=editing-artiсle&id=<?php echo $arti[$key]['id'] ?>">
                                             <div class="flex my-article__editing">
                                                 <h3 class="my-article-editing__text">
                                                     Редактировать статью 
@@ -494,7 +275,8 @@
                         <?php
                         $i++;
                         
-                    }      
+                    }  
+                         
                     echo '        
                     </div>
                 </section>
@@ -504,19 +286,16 @@
             // HTML кнопка выхода из аккаунта
             echo'
             <section class="flex my-page__end">
-                <form class="flex my-page-end__relog" action="/blog_my-page.php" method="POST">
+                <form class="flex form my-page-end__relog" action="/blog_my-page.php" method="POST">
+                    <input type="hidden" name="name-form" value="my-page__exit">    
                     <div class="flex my-page-end-relog__btn">
-                        <button class="flex my-page-end-relog__btn" name="du_relog" tyep="submit" >
+                        <button class="flex my-page-end-relog__btn" name="du_relog" type="submit" >
                             Выйти из аккаунта
                         </button>
                     </div>
                 </form>
             </section>
+        </main>
             ';        
 
         ?>
-           
-
-</body>
-
-</html>

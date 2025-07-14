@@ -69,7 +69,7 @@
                         $i = 1;
 
                         // Цикл создания надписей категорий, кол во категорий зависит от $mbc
-                        while( $i <= $mbc - 1 and isset($cat[$mc -1 + $i]['name']))
+                        while( $i <= $mbc - 1)
                         {
                             ?> 
                                 <li class="header-bottom-categories-list__title">
@@ -111,3 +111,4 @@
             </div>
         </div>
     </footer>
+</body>

@@ -1,147 +1,5 @@
-<?php include "blog_session.php"; ?>
-
-<!DOCTYPE html>
-<html lang="ru">
-
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $_GET['title'] ?></title>
-    <link rel="stylesheet" href="/css/blog_global.css">
-    <link rel="stylesheet" href="/css/blog_global_media.css">
-    <link rel="stylesheet" href="/css/blog_header.css">
-    <link rel="stylesheet" href="/css/blog_header_media.css">
-    <link rel="stylesheet" href="/css/blog_sidbar.css">
-    <link rel="stylesheet" href="/css/blog_sidbar_media.css">
-    <link rel="stylesheet" href="/css/blog_article.css">
-    <link rel="stylesheet" href="/css/blog_article_media.css">
-    <link rel="icon" href="/img/favicon.png" type="image/x-icon">
-</head>
-
-<body>
-    <?php
+    <main class="main_content">
     
-    //Копирование кода из файла blog_header.php
-    include "blog_header.php";
-
-    // Проверка данных при создании комментария
-    // Проверяеться отправленна ли форма коментария
-    if( isset($_POST['du_my-comments']) ) {
-        
-        // Создаёться массив для ошибок
-        $errors = array();
-
-        // Проверка наличия текста
-        if( trim( $_POST['text']) == '' ){
-
-            // Добавление записи об отсуцтвие текста если его нет
-            $errors[] = 'Введите текст!';
-        }
-
-        //Проверка что текст короче 150 символов
-        if(  mb_strlen( $_POST['text']) > 150 ){
-
-            // Добавление записи о том что текст слишком длинный
-            $errors[] = 'Текст длинее 150 символов';
-        }
-
-
-        // Проверка наличия ошибок
-        if( empty($errors) ){
-            
-            // Объявление переменных для SQL запроса и создания записи в БД
-            $author_id = $_SESSION['acount']['id'];
-            $article_id = $_GET['id'];
-            $text = $_POST['text'];
-
-            // SQL запрос в БД и создание записи
-            $sql = "INSERT INTO coments (author_id, article_id, text) VALUES (' $author_id ', ' $article_id ', ' $text ' )";
-            $mysqli_query = mysqli_query($connection, $sql);
-           
-        }
-        
-    }
-
-    if( isset($_POST['du_my-like'] )) {
-        
-        // Создаёться массив для ошибок
-        $errors = array();
-
-        // Проверка существования аккаунта 
-        if( !isset($_SESSION['acount']) ){
-
-            // Добавление записи об отсуцтвие текста если его нет
-            $errors[] = 'Войдите в аккаунт';
-        } else {
-
-            // Проверка есть ли строка с лайком данным пользователем данной статьи
-            foreach ($lik_e as &$lik) 
-            {
-                        
-                if( $lik['id_user'] == $_SESSION['acount']['id']) 
-                {
-                    if( $lik['id_article'] == $_GET['id'])  
-                    {
-                        $my_like['id'] = $lik['id'];
-                        $my_like['exist'] = '1' ;
-                    }
-                            
-                }
-            }
-        }
-        
-
-        // Проверка наличия ошибок
-        if( empty($errors) ){
-
-            if (strlen($my_like['exist'] . '1') == 1)
-            {
-                // Объявление переменных для SQL запроса и создания записи в БД
-                $author_id = $_SESSION['acount']['id'];
-                $article_id = $_GET['id'];
-
-                // SQL запрос в БД и создание записи лайка
-                $sql = "INSERT INTO lik_e (id_user, id_article ) VALUES (' $author_id ', ' $article_id ' )";
-                $mysqli_query = mysqli_query($connection, $sql);   
-
-                // Перенаправление для сброса пост запроса 
-                echo '<script> window.setTimeout(function() { window.location = "blog_article.php?id='.$_GET['id'].'&title='.$_GET['title'].'"; }, 2000) </script>';
-            } 
-            else 
-            {
-                $id = $my_like['id'];  
-                
-                $sql = "DELETE FROM `lik_e` WHERE `id` = '$id'";
-                $mysqli_query = mysqli_query($connection, $sql);   
-
-                // Перенаправление для сброса пост запроса 
-                echo '<script> window.setTimeout(function() { window.location = "blog_article.php?id='.$_GET['id'].'&title='.$_GET['title'].'"; }, 2000) </script>';
-            }
-            
-            
-        }
-        else 
-        {
-             // Вывод сообщения об ошибке при заполнении формы
-             echo '
-             <div class="flex errors">
-                 '. array_shift($errors) .'
-             </div>
-             ';
-        }
-        
-        $_POST['du_my-like'] = 1;
-    }
-
-    ?>
-    <main>
-        <?php
-        // Копирование кода из файла blog_sidbar.php
-        include "blog_sidbar.php";
-
-
-        ?>
         <?php
             
             // Поиск ключа нужной статьи в массиве всех статей $arti по id статьи, полученном из GET запроса
@@ -189,7 +47,7 @@
                 </div>
                 <div class="flex article-base__bottom">
                     <div class="flex article-base-bottom__like">
-                        <form class="flex article-base-bottom-like__form" action="/blog_article.php?id='.$_GET['id'].'&title='. $_GET['title'] .'#coments" method="post" enctype="multipart/form-data">
+                        <form class="flex form article-base-bottom-like__form" action="/blog_main.php?page=article&id='.$_GET['id'].'&title='. $_GET['title'] .'#coments" method="post" enctype="multipart/form-data">
                             <button class="btn-reset article-base-bottom-like__btn" name="du_my-like" tyep="submit">
                                 '; 
                                     // Проверка лайкну та ли данная статья пользователем, и если да, изменение картинки лайка
@@ -206,6 +64,9 @@
                             <div class="article-base-bottom-like__text">
                             ' . $arts_max_likes[$likey]['like'] . '
                             </div>
+                            <input type="hidden" name="name-form" value="likes">
+                            <input type="hidden" name="id_article" value='.$_GET['id'].'>
+                            <input type="hidden" name="url" value='. "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]" .'>
                         </form>
                     </div>
                     <div class="flex article-base-bottom__views">
@@ -241,7 +102,7 @@
             </div>
             <div class="article__comments">
             ';
-                // Нахождение всех ключей сомментариев для данной статьи по id статьи
+                // Нахождение всех ключей комментариев для данной статьи по id статьи
                 $keys = array_keys(array_column($com, 'article_id'), $_GET['id']);
 
                 $a=0;
@@ -278,96 +139,48 @@
 
             // Проверка существования ссесиии для отображения формы комментария, а так же вывода ошибки\
             // успеха создания комментария
-            if( isset($_SESSION['acount']['id'])){
+            if( $_SESSION['acount']['id'] != ''){
                 echo'
                     <div class="article__my-comments">
                     ';
-                    $data = $_POST;
-                    
-                    // Проверка отправлена ли форма комментария
-                    if( isset($data['du_my-comments']) ) {
-            
-                        // Проверка наличия ошибок если форма отправленна
-                        if( empty($errors) ){
-                            
-                            // Проверка успешного создания в базе БД, если нет ошибок в форме
-                            if ( $mysqli_query == true ) {
-
-                                // Сообщение об успешном создании комментария
-                                echo '
-                                <div class="flex cuc-coments">
-                                    Комментарий <br> успешно создан!
-                                </div>
-                                ';
-            
-                            } else {
-
-                                // Вывод ошибки если форма правильная, но не произошла запись в БД
-                                echo '
-                                <div class="flex errors">
-                                    '. "Error: " . $sql . "<br>" . mysqli_error($connection) .'
-                                </div>
-                                ';
-                            }
-            
-                        } else {
-
-                            // Вывод сообщения об ошибке при заполнении формы
-                            echo '
-                            <div class="flex errors">
-                                '. array_shift($errors) .'
+                        //  HTML Форма для написания и отправки комментария
+                        echo'
+                        <a id="coments"></a>
+                        <div class="flex article-my-comments__post">
+                            <div class="article-my-comments-post__picture">
+                                <img class="article-my-comments-post-picture__img" src="/img/a' .  $_SESSION['acount']['avatar'] . '.png" alt="avatar">
                             </div>
-                            ';
-                            
-                        }
-            
-                    }
-                            //  HTML Форма для написания и отправки комментария
-                           ?>
-                            <a id="coments"></a>
-                            <div class="flex article-my-comments__post">
-                                <div class="article-my-comments-post__picture">
-                                    <img class="article-my-comments-post-picture__img" src="/img/a<?php echo  $_SESSION['acount']['avatar'] ?>.png" alt="avatar">
+                            <div class="article-my-comments-post__right">
+                                <div class="article-my-comments-post-right__name">
+                                ' .  $_SESSION['acount']['name'] . '
                                 </div>
-                                <div class="article-my-comments-post__right">
-                                    <div class="article-my-comments-post-right__name">
-                                    <?php echo $_SESSION['acount']['name'] ?>
-                                    </div>
-                                    <div class="article-my-comments-post-right__data">
-                                    <?php echo date("Y-m-d H:i") ?>
-                                    </div>
-                                    <form class="flex article-my-comments-post__form" action="/blog_article.php?id=<?php echo $_GET['id'] ?>&title=<?php $_GET['title'] ?>#coments" method="post" enctype="multipart/form-data">
-                                        <div class="flex article-my-comments-post-form__text">
-                                            <textarea class="article-my-comments-post-form-text__textarea" resize type="text" name="text" ><?php if (isset($data['text'])) echo $data['text']; ?></textarea>
-                                            <div class="article-my-comments-post-form-text__symbols">
-                                                <?php
-                                                    if (isset($data['text'])) {
-                                                        $symbols = mb_strlen( $data['text']);   
-                                                    } else {
-                                                        $symbols = 0;
-                                                    }
-                                                    echo'
-                                                        Количество символов = '. $symbols .'     
-                                                    ';
-                                                ?>
-                                            </div>
-                                        </div>
-                                        <div class="flex btn-reset article-my-comments-post-form__com">
-                                            <button class="article-my-comments-post-form-com__btn" name="du_my-comments" tyep="submit" >
-                                                Создать
-                                            </button>
-                                        </div>
-                                    </form>
+                                <div class="article-my-comments-post-right__data">
+                                ' .    date("Y-m-d H:i") . '
                                 </div>
+                                <form class="flex article-my-comments-post__form" action="/blog_main.php?page=article&id='.$_GET['id'].'&title='. $_GET['title'] .'#coments" method="post" enctype="multipart/form-data">
+                                    <div class="flex article-my-comments-post-form__text">
+                                        <textarea class="article-my-comments-post-form-text__textarea" resize type="text" name="text" >'.$data['text'].'</textarea>
+                                        <div class="article-my-comments-post-form-text__symbols">
+                                            ';
+                                                $symbols = mb_strlen( $data['text']);
+                                                echo'
+                                                    Количество символов = '. $symbols .'     
+                                                ';
+                                            echo'
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="name-form" value="comment">
+                                    <div class="flex btn-reset article-my-comments-post-form__com">
+                                        <button class="article-my-comments-post-form-com__btn" name="du_my-comments" tyep="submit" >
+                                            Создать
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
+                        </div>
                     </div>
                 </section>    
-                <?php 
+                '; 
             }
         ?>
     </main>
-
-
-</body>
-
-</html>

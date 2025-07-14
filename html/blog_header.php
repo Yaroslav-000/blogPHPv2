@@ -1,34 +1,6 @@
 <?php //session_start(); // Запуск ссесии
 //setcookie('acount'); // Создание куки 
 
-// Подключение к бд (На OSPanel)
-$host = '127.0.0.1';
-$servername = "db";
-$username = 'root';
-$pass = 'root';
-$bd = 'blog_bd';
-$connection = mysqli_connect($servername, $username, $pass, $bd);
-
-
-// Объектно-ориентированный способ подключения БД
-// $connection = new mysqli($host, $username, $pass, $bd);
-
-// $servername = "db";
-// $username = "docker";
-// $password1 = "docker";
-// $password2 = "root";
-// $dbname = "blog_bd";
-
-// $connection = new mysqli($servername, $username, $password1, $dbname);
-
-// Проверка удачно ли подключение к БД
-if( $connection == false )
-{
-    echo 'Не удаёться подключиться к БД! <br>';
-    echo mysqli_connect_errno();
-    exit;
-
-}
 
 // Mod categoris,  Мод категорий, производит смещение категорий в зависимости от того на какой странице пользователь
 $mc = 0; 
@@ -42,88 +14,15 @@ if( isset($_GET['mc']))
     $mc = $_GET['mc'] * $mbc;
 }
 
-// Запрос на информацию из таблицы статьи отсортирован по дате
-$pubdate = "SELECT * FROM article ORDER BY pubdate DESC";
-$article_pubdate = mysqli_query($connection, $pubdate);
-
-// Запрос на информацию из таблицы Категории статей
-$categoris = "SELECT * FROM article_categoris";
-$article_categoris = mysqli_query($connection, $categoris);
-
-// Запрос на информацию из таблицы аккаунты
-$account = "SELECT * FROM account";
-$author = mysqli_query($connection, $account);
-
-// Запрос на информацию из таблицы комментарии отсортирован по дате
-$coments = "SELECT * FROM coments ORDER BY pubdate DESC";
-$coment = mysqli_query($connection, $coments);
-
-// Запрос на информацию из таблицы лайки
-$like_bd = "SELECT * FROM lik_e ";
-$like_mysqli = mysqli_query($connection, $like_bd);
-
-// Переннос данных из таблицы категории в массив
-$a = 0;
-
-while ($cats = mysqli_fetch_assoc($article_categoris)) 
-{
-
-    $cat[$a] = $cats;
-
-    $a++;
-}
-
-// Переннос данных из таблицы статьи в массив
-$b = 0;
-
-while ($articles = mysqli_fetch_assoc($article_pubdate)) 
-{
-
-    $arti[$b] = $articles;
-
-    $b++;
-}
-
-// Переннос данных из таблицы аккаунты в массив
-$c = 0;
-
-while ($authors = mysqli_fetch_assoc($author)) 
-{
-
-    $autho[$c] = $authors;
-
-    $c++;
-}
-
-// Переннос данных из таблицы комментарии в массив
-$d = 0;
-
-while ($commentary = mysqli_fetch_assoc($coment)) 
-{
-
-    $com[$d] = $commentary;
-
-    $d++;
-}
-
-// Переннос данных из таблицы лайки в массив
-$f = 0;
-
-while ($like_while = mysqli_fetch_assoc($like_mysqli)) 
-{
-
-    $lik_e[$f] = $like_while;
-
-    $f++;
-}
-
+include "blog_bd-connect.php";
+// print_r($cat);
 // Проверка существования куки или ссесии акаунт
 // Для автороизации пользователей и сохранения статуса авторизации
 // $_SESSION['acount']['remember'] == 'Yes\No' попытка реализовать запоминание пользователя (не работает)
 // Так как ссесия уничтожаеться только после выключения бразерра а не закрытия вкладки
 
 // Проверка существования ссесии
-// if($_SESSION['acount']['name'] != '' and  $_SESSION['acount']['remember'] == 'Yes' )
+// if($_SESSION['acount']['name'] != '' &&  $_SESSION['acount']['remember'] == 'Yes' )
 // {
 
 //     // Проверка равенства куки и ссесии акаунт
@@ -186,7 +85,7 @@ while ($like_while = mysqli_fetch_assoc($like_mysqli))
         <div class="flex header__top">
             <!-- Блок картинки лого -->
             <div class="header-top__logo">
-                <a class="header-top-logo__link" href="/blog_main.php" >
+                <a class="header-top-logo__link link" href="/blog_main.php" >
                     <img class="header-top-logo-link__img" src="/img/singularis-1.png" alt="Лого">
                 </a>
             </div>
@@ -215,7 +114,7 @@ while ($like_while = mysqli_fetch_assoc($like_mysqli))
                 ?>
 
                 <!-- Левая стрелочка -->
-                <a href="/blog_main.php?mc=<?php echo  $accl ?>">
+                <a class="link" href="/blog_main.php?mc=<?php echo  $accl ?>">
                     <button class="btn-reset header-bottom-categories__left-btn">
                         <svg class="svg" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="32px" height="32px" viewBox="0 0 330 330" style="enable-background:new 0 0 330 330;" xml:space="preserve">
                             <path id="XMLID_224_" d="M325.606,229.393l-150.004-150C172.79,76.58,168.974,75,164.996,75c-3.979,0-7.794,1.581-10.607,4.394
@@ -249,7 +148,7 @@ while ($like_while = mysqli_fetch_assoc($like_mysqli))
                         $i = 1;
 
                         // Цикл создания надписей категорий, кол во категорий зависит от $mbc
-                        while( $i <= $mbc - 1 and isset($cat[$mc -1 + $i]['name']))
+                        while( $i <= $mbc - 1)
                         {
                             ?> 
                                 <li class="header-bottom-categories-list__title">
@@ -278,7 +177,7 @@ while ($like_while = mysqli_fetch_assoc($like_mysqli))
                     ?>
 
                 <!-- Правая стрелочка -->
-                <a href="/blog_main.php?mc=<?php echo  $accr ?>">
+                <a class="link" href="/blog_main.php?mc=<?php echo  $accr ?>">
                     <button class="btn-reset header-bottom-categories__right-btn">
                         <svg class="svg" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="32px" height="32px" viewBox="0 0 330 330" style="enable-background:new 0 0 330 330;" xml:space="preserve">
                             <path id="XMLID_224_" d="M325.606,229.393l-150.004-150C172.79,76.58,168.974,75,164.996,75c-3.979,0-7.794,1.581-10.607,4.394
@@ -302,7 +201,7 @@ while ($like_while = mysqli_fetch_assoc($like_mysqli))
                 {
                     ?>
                     <!-- Вывод кнопки перехода в личный кабинет -->
-                    <a href="/blog_my-page.php">
+                    <a class="link" href="/blog_main.php?page=my-page">
                         <div class="header-bottom__my-page">
                             <button class="btn-reset header-bottom-my-page__btn">
                                 <img class="header-bottom-my-page-btn__img " src="/img/a<?php echo $_SESSION['acount']['avatar'] ?>.png" alt="">
@@ -316,7 +215,7 @@ while ($like_while = mysqli_fetch_assoc($like_mysqli))
                 {
                     ?>
                     <!--  Вывод кнопок регистрации и авторизации -->
-                    <a href="/blog_signup.php" >
+                    <a class="link" href="/blog_main.php?page=signup" >
                         <div class="header-bottom__user">
                             <button class="btn-reset header-bottom-user__btn">
                                 <svg class="svg" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="32px" height="32px" viewBox="0 0 459 459" style="enable-background:new 0 0 459 459;" xml:space="preserve">
@@ -329,7 +228,7 @@ while ($like_while = mysqli_fetch_assoc($like_mysqli))
                             </button>
                         </div>
                     </a>
-                    <a href="/blog_login.php">
+                    <a class="link" href="/blog_main.php?page=login">
                         <div class="header-bottom__login">
                             <button class="btn-reset header-bottom-login__btn">
                                 <svg class="svg" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
@@ -361,6 +260,3 @@ while ($like_while = mysqli_fetch_assoc($like_mysqli))
             
         </div>
     </header>
-</body>
-
-</html>
